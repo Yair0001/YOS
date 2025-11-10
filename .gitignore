@@ -1,0 +1,11 @@
+# Build artifacts
+/bin/
+/build/
+
+# Cross-compiler binaries
+/CrossCompiler/
+
+# OS images (can be rebuilt)
+/*.bin
+
+.DS_Store
