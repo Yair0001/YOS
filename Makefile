@@ -1,38 +1,64 @@
+# ================= CONFIG =======================
 ASM = nasm
-ASMFLAGS= -g -ffreestanding -nostdlib -nostartfiles -nodefaultlibs -Wall -O0 -Iinc
-
 CC = i686-elf-gcc
-CFLAGS = -ffreestanding -m16 -O0 -Wall -I./src
-
 LD = i686-elf-ld
-LDFLAGS = -T
 
-BUILD = build
-BIN = bin
-BOOT = src/bootloader
+FLAGS = -g -ffreestanding -nostdlib -nostartfiles -nodefaultlibs -Wall -O0 -I./src/inc
+ASMFLAGS = -f elf -g
 
-export ASM ASMFLAGS CC CFLAGS LD LDFLAGS
+BUILD_DIR = ./build
+BIN_DIR = ./bin
 
+# Source files
+STAGE1_SRC = ./src/boot/stage1/stage1.asm
+STAGE2_ASM_SRC = ./src/boot/stage2/stage2.asm
+STAGE2_C_SRC = ./src/boot/stage2/stage2.c
+LINKER_SCRIPT = ./src/boot/linker.ld
 
-#### BOOTLOADER
-BOOT = src/bootloader
-STAGE1_DIR = $(BOOT)/stage1
-STAGE2_DIR = $(BOOT)/stage2
+# Output files
+STAGE1_BIN = $(BIN_DIR)/stage1.bin
+STAGE2_BIN = $(BIN_DIR)/stage2.bin
+OS_IMAGE = $(BIN_DIR)/os.bin
 
-STAGE1_BIN = $(BIN)/stage1.bin
-STAGE2_BIN = $(BIN)/stage2.bin
+STAGE2_ASM_OBJ = $(BUILD_DIR)/stage2.asm.o
+STAGE2_C_OBJ = $(BUILD_DIR)/stage2.o
+STAGE2_OBJ = $(BUILD_DIR)/stage2_full.o
 
+# ================= TARGETS ======================
 
-run: all
-	qemu-system-x86_64 -hda $(BIN)/os.bin
+.PHONY: all clean dirs
 
-all: $(BIN)/os.bin
+run: $(OS_IMAGE)
+	qemu-system-x86_64 -hda $(OS_IMAGE)
 
-$(BIN)/os.bin: ($STAGE1_BIN) $(STAGE2_BIN)
-	cp $< $@
-	cat $(word 2, $^) >> $@
-	dd if=/dev/zero bs=512 count=8 >> ./bin/os.bin
+all: dirs $(OS_IMAGE)
 
+dirs:
+	@mkdir -p $(BUILD_DIR) $(BIN_DIR)
+
+# --- Stage 1 bootloader (boot sector) ---
+$(STAGE1_BIN): $(STAGE1_SRC)
+	$(ASM) -f bin $< -o $@
+
+# --- Stage 2 build (ASM + C) ---
+$(STAGE2_ASM_OBJ): $(STAGE2_ASM_SRC)
+	$(ASM) $(ASMFLAGS) $< -o $@
+
+$(STAGE2_C_OBJ): $(STAGE2_C_SRC)
+	$(CC) $(FLAGS) -std=gnu99 -c $< -o $@
+
+$(STAGE2_OBJ): $(STAGE2_ASM_OBJ) $(STAGE2_C_OBJ)
+	$(LD) -g -relocatable $^ -o $@
+
+$(STAGE2_BIN): $(STAGE2_OBJ) $(LINKER_SCRIPT)
+	$(CC) $(FLAGS) -T $(LINKER_SCRIPT) -o $@ -ffreestanding -nostdlib $(STAGE2_OBJ)
+
+# --- Combine into final image ---
+$(OS_IMAGE): $(STAGE1_BIN) $(STAGE2_BIN)
+	cat $(STAGE1_BIN) $(STAGE2_BIN) > $@
+	dd if=/dev/zero bs=512 count=8 >> $@ 2>/dev/null
+
+# --- Cleanup ---
 clean:
-	rm -f $(BIN)/os.bin
-
+	rm -f $(BIN_DIR)/*.bin
+	rm -f $(BUILD_DIR)/*.o
