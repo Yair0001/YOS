@@ -3,8 +3,8 @@ ASM = nasm
 CC = i686-elf-gcc
 LD = i686-elf-ld
 
-FLAGS = -g -ffreestanding -nostdlib -nostartfiles -nodefaultlibs -Wall -O0 -I./src/inc
-ASMFLAGS = -f elf -g
+FLAGS = -ffreestanding -nostdlib -nostartfiles -nodefaultlibs -Wall -O0
+ASMFLAGS = -f elf
 
 BUILD_DIR = ./build
 BIN_DIR = ./bin
@@ -13,7 +13,7 @@ BIN_DIR = ./bin
 STAGE1_SRC = ./src/boot/stage1/stage1.asm
 STAGE2_ASM_SRC = ./src/boot/stage2/stage2.asm
 STAGE2_C_SRC = ./src/boot/stage2/stage2.c
-LINKER_SCRIPT = ./src/boot/linker.ld
+LINKER_SCRIPT = ./src/boot/stage2/linker.ld
 
 # Output files
 STAGE1_BIN = $(BIN_DIR)/stage1.bin
@@ -45,10 +45,10 @@ $(STAGE2_ASM_OBJ): $(STAGE2_ASM_SRC)
 	$(ASM) $(ASMFLAGS) $< -o $@
 
 $(STAGE2_C_OBJ): $(STAGE2_C_SRC)
-	$(CC) $(FLAGS) -std=gnu99 -c $< -o $@
+	$(CC) $(FLAGS) -c $< -o $@
 
 $(STAGE2_OBJ): $(STAGE2_ASM_OBJ) $(STAGE2_C_OBJ)
-	$(LD) -g -relocatable $^ -o $@
+	$(LD) -relocatable $^ -o $@
 
 $(STAGE2_BIN): $(STAGE2_OBJ) $(LINKER_SCRIPT)
 	$(CC) $(FLAGS) -T $(LINKER_SCRIPT) -o $@ -ffreestanding -nostdlib $(STAGE2_OBJ)

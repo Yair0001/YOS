@@ -3,8 +3,6 @@
 CODE_OFFSET equ 0x8
 DATA_OFFSET equ 0x10
 
-
-
 global _start
 extern stage2_main
 
@@ -17,6 +15,11 @@ load_PM:
     mov eax, cr0
     or al, 1
     mov cr0, eax
+
+    ; enable A20 line
+    in al, 0x92
+    or al, 2
+    out 0x92, al
 
     jmp CODE_OFFSET:PModeMain
 
@@ -60,14 +63,5 @@ PModeMain:
     mov gs, ax
     mov ebp, 0x9c00
     mov esp, ebp
-
-    ; enable A20 line
-    in al, 0x92
-    or al, 2
-    out 0x92, al
     
-   call stage2_main
-
-times 510-($-$$) db 0
-dw 0xaa55
-
+   jmp stage2_main

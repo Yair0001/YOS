@@ -2,5 +2,5 @@
 #define STAGE2_H
 
 void stage2_main();
-
+void load_kern();
 #endif
