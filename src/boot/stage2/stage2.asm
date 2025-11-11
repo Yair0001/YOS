@@ -1,41 +1,23 @@
 [bits 16]
-[org 0x7c00]
 
 CODE_OFFSET equ 0x8
 DATA_OFFSET equ 0x10
 
-KERNEL_LOAD_SEG equ 0x1000
-KERNEL_START_ADDR equ 0x100000
-start:
-    cli ; disable interrupts
 
-    ; setup registers
-    xor ax, ax       ; AX = 0
-    mov ds, ax       ; DS = 0
-    mov es, ax       ; ES = 0
-    mov ss, ax       ; SS = 0
-    mov sp, 0x7c00   ; stack pointer
-    sti ; enable interrupts
 
-load_kernel:
-    ; Load kernel
-    mov bx, KERNEL_LOAD_SEG
-    mov dh, 0x00
-    mov dl, 0x80
-    mov cl, 0x02
-    mov ch, 0x00
-    mov ah, 0x02
-    mov al, 8
-    int 0x13
+global _start
+extern stage2_main
 
-    jc disk_read_error
+_start:
 
 load_PM:
     cli ; disable interrupts
     lgdt[gdt_descriptor]
+    
     mov eax, cr0
     or al, 1
     mov cr0, eax
+
     jmp CODE_OFFSET:PModeMain
 
 disk_read_error:
@@ -84,7 +66,7 @@ PModeMain:
     or al, 2
     out 0x92, al
     
-    jmp CODE_OFFSET:KERNEL_START_ADDR
+   call stage2_main
 
 times 510-($-$$) db 0
 dw 0xaa55
