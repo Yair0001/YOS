@@ -1,5 +1,5 @@
 #include "stage2.h"
-#include "disk.h"
+#include "disk/disk.h"
 
 void load_kern(){
     /*
@@ -9,17 +9,11 @@ void load_kern(){
 
     disk_read
     // jump to that address
-    void (*kern_entry)(void) = (void*)0x200000;
-    kern_entry();
     */
+    void (*kern_entry)(void) = (void*)0x100000;
+    kern_entry();
 }
 
 void stage2_main(){
-    // test
-    volatile char *screen = (volatile char*)0xB8000;
-    *screen = 'd';
-    *(screen+1) = 2;
-    while(1);
-
     load_kern();
 }

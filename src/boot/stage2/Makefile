@@ -2,7 +2,6 @@
 
 CC = i686-elf-gcc
 LD = i686-elf-ld
-CFLAGS = -ffreestanding -nostdlib -nostartfiles -nodefaultlibs -Wall -O0
 ASMFLAGS = -f elf
 
 STAGE2_C = stage2.c
@@ -21,10 +20,10 @@ $(STAGE2_ASM_OBJ): $(STAGE2_ASM_SRC)
 	$(ASM) $(ASMFLAGS) $< -o $@
 
 $(STAGE2_C_OBJ): $(STAGE2_C)
-	$(CC) -c $(CFLAGS) $< -o $@ 
+	$(CC) -c $(CC_FLAGS) $< -o $@ 
 
 $(STAGE2_BIN): $(STAGE2_OBJ)
-	$(CC) $(CFLAGS) -T $(STAGE2_LD) -o $@ -ffreestanding -nostdlib $<
+	$(CC) $(CC_FLAGS) -T $(STAGE2_LD) -o $@ -ffreestanding -nostdlib $<
 
 $(STAGE2_OBJ): $(STAGE2_ASM_OBJ) $(STAGE2_C_OBJ)
 	$(LD) -relocatable $^ -o $@

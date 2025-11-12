@@ -25,14 +25,17 @@ typedef enum {
     ERR_WRITE_ERROR             = 0xCC  // Write error
 } DiskErrorCode;
 
-
+typedef enum {
+    HDD = 0x80
+    // if ill need more then ill add, right now i only support hdd
+} DiskNum;
 
 typedef struct {
-    int           carryFlag;
-    int           numSectRead;
+    uint           carryFlag : 1;
+    uint           numSectRead;
     DiskErrorCode *err;
 } readDiskOut;
 
-readDiskOut readDisk(uint numSectToRead, uint trackNumber);
+readDiskOut readDiskCHS(uint addrToLoad, uint numSectToRead, uint trackNumber, uint sectorNumber, DiskNum diskNum, bool diskSideNum, uint bufSegAddr);
 
 #endif

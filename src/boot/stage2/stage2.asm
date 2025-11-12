@@ -6,6 +6,7 @@ DATA_OFFSET equ 0x10
 global _start
 extern stage2_main
 
+
 _start:
 
 load_PM:
@@ -22,9 +23,6 @@ load_PM:
     out 0x92, al
 
     jmp CODE_OFFSET:PModeMain
-
-disk_read_error:
-    hlt
 
 gdt_start:
     ; null descriptor
