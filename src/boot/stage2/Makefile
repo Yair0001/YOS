@@ -6,21 +6,28 @@ CFLAGS = -ffreestanding -nostdlib -nostartfiles -nodefaultlibs -Wall -O0
 ASMFLAGS = -f elf
 
 STAGE2_C = stage2.c
-STAGE2_LD   = stage2.ld
+STAGE2_LD = linker.ld
+
+STAGE2_ASM_SRC = stage2.asm
+STAGE2_ASM_OBJ = $(BUILD)/stage2.asm.o
+STAGE2_C_OBJ = $(BUILD)/stage2.o
+STAGE2_OBJ = $(BUILD)/stage2_full.o
 
 STAGE2_BIN  = $(BIN)/stage2.bin
-STAGE2_OBJS = $(BUILD)/stage2_asm.o $(BUILD)/stage2.o
 
 all: $(STAGE2_BIN)
 
-$(BUILD)/stage2_asm.o: $(STAGE2_STUB)
+$(STAGE2_ASM_OBJ): $(STAGE2_ASM_SRC)
 	$(ASM) $(ASMFLAGS) $< -o $@
 
-$(BUILD)/stage2.o: $(STAGE2_C)
-	$(CC) -c $(CFLAGS) $< -o $@
+$(STAGE2_C_OBJ): $(STAGE2_C)
+	$(CC) -c $(CFLAGS) $< -o $@ 
 
-$(STAGE2_BIN): $(STAGE2_OBJS)
-	$(LD) -T $(STAGE2_LD) -o $@ $(STAGE2_OBJS)
+$(STAGE2_BIN): $(STAGE2_OBJ)
+	$(CC) $(CFLAGS) -T $(STAGE2_LD) -o $@ -ffreestanding -nostdlib $<
+
+$(STAGE2_OBJ): $(STAGE2_ASM_OBJ) $(STAGE2_C_OBJ)
+	$(LD) -relocatable $^ -o $@
 
 clean:
-	rm -f $(STAGE2_OBJS) $(STAGE2_BIN)
+	rm -f $(STAGE2_OBJ) $(STAGE2_BIN) $(STAGE2_ASM_OBJ) $(STAGE2_C_OBJ)
