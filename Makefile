@@ -3,7 +3,8 @@ BUILD = $(abspath build/)
 ASM = nasm
 CC = i686-elf-gcc
 LD = i686-elf-ld
-CC_FLAGS = -m32 -ffreestanding -nostdlib -nostartfiles -nodefaultlibs -Wall -O0
+CC_FLAGS = -m32 -ffreestanding -nostdlib -nostartfiles -nodefaultlibs -Wall -O0 -g
+LD_FLAGS  = -m elf_i386 -T linker.ld
 
 export BIN ASM BUILD CC LD CC_FLAGS
 

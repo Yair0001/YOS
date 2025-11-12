@@ -6,7 +6,6 @@ DATA_OFFSET equ 0x10
 global _start
 extern stage2_main
 
-
 _start:
 
 load_PM:
@@ -25,11 +24,11 @@ load_PM:
     jmp CODE_OFFSET:PModeMain
 
 gdt_start:
-    ; null descriptor
+null_desc:
     dd 0x0
     dd 0x0
 
-    ; Code segment
+code_desc:
     dw 0xFFFF ; limit
     dw 0x0000 ; base
     db 0x00 ; base
@@ -37,7 +36,7 @@ gdt_start:
     db 11001111b ; flags
     db 0x00 ; base
 
-    ; data segment
+data_desc:
     dw 0xFFFF ; limit
     dw 0x0000 ; base
     db 0x00 ; base
