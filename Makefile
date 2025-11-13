@@ -3,7 +3,7 @@ ASM = nasm
 CC = i686-elf-gcc
 LD = i686-elf-ld
 
-FLAGS = -g -ffreestanding -nostdlib -nostartfiles -nodefaultlibs -Wall -O0 -I./src/inc
+FLAGS = -g -ffreestanding -nostdlib -nostartfiles -nodefaultlibs -Wall -O0 -I./src/common
 ASMFLAGS = -f elf -g
 
 BUILD_DIR = ./build
@@ -24,6 +24,9 @@ STAGE2_ASM_OBJ = $(BUILD_DIR)/stage2.asm.o
 STAGE2_C_OBJ = $(BUILD_DIR)/stage2.o
 STAGE2_OBJ = $(BUILD_DIR)/stage2_full.o
 
+PRINTK_SRC = ./src/common/printk.c
+PRINTK_OBJ = $(BUILD_DIR)/printk.o
+
 # ================= TARGETS ======================
 
 .PHONY: all clean dirs
@@ -36,6 +39,10 @@ all: dirs $(OS_IMAGE)
 dirs:
 	@mkdir -p $(BUILD_DIR) $(BIN_DIR)
 
+$(PRINTK_OBJ): $(PRINTK_SRC)
+	$(CC) $(FLAGS) -c $< -o $@
+
+
 # --- Stage 1 bootloader (boot sector) ---
 $(STAGE1_BIN): $(STAGE1_SRC)
 	$(ASM) -f bin $< -o $@
@@ -45,10 +52,11 @@ $(STAGE2_ASM_OBJ): $(STAGE2_ASM_SRC)
 	$(ASM) $(ASMFLAGS) $< -o $@
 
 $(STAGE2_C_OBJ): $(STAGE2_C_SRC)
-	$(CC) $(FLAGS) -std=gnu99 -c $< -o $@
+	$(CC) $(FLAGS) -c $< -o $@
 
-$(STAGE2_OBJ): $(STAGE2_ASM_OBJ) $(STAGE2_C_OBJ)
+$(STAGE2_OBJ): $(STAGE2_ASM_OBJ) $(STAGE2_C_OBJ) $(PRINTK_OBJ)
 	$(LD) -g -relocatable $^ -o $@
+
 
 $(STAGE2_BIN): $(STAGE2_OBJ) $(LINKER_SCRIPT)
 	$(CC) $(FLAGS) -T $(LINKER_SCRIPT) -o $@ -ffreestanding -nostdlib $(STAGE2_OBJ)
