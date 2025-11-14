@@ -2,6 +2,6 @@
 #include "../../common/printk.h"
 
 void stage2_main(){
-    chrToScreen('d', WHITE);
+    printk("%u", -123);
     while(1);
 }

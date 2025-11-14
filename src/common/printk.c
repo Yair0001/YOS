@@ -23,11 +23,12 @@ void printk(const char *str, ...){
     va_start(args, str);
     
     for(; *str != 0; str++){
-
         switch (*str) {
-            case PERCENT_SYM:
-                parseSym(str++, args);
+            case PERCENT_SIGN:
+                parseSym(str++, &args);
                 break;
+            case NEW_LINE:
+                
             default:
                 chrToScreen(*str, WHITE);
         }

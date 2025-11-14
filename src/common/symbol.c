@@ -1,17 +1,47 @@
 #include "symbol.h"
+#include "../common/intconv.h"
 #include "../common/printk.h"
+#include <stdint.h>
 
 void handleSignedIntSym(const char *modifiers, va_list *args){
-
 }
+
+/*
+    @param: modifiers - will be a string of modifiers and u at the end (ex. 05u for %05u)
+    @param: args - contains all arguments after str in printk
+
+    (for now only expect for %u, not handling for %05u or else)
+*/
 void handleUnsignedIntSym(const char *modifiers, va_list *args){
-
+    uint32_t n = va_arg(*args,uint32_t);
+    char buf[32];
+    const char *strNum = utoa(n, buf);
+    for(; *strNum!=0; strNum++){
+        chrToScreen(*strNum, WHITE);
+    }
 }
+
+/*
+    @param: modifiers - will be a string of modifiers and s at the end (ex. 05s for %05s)
+    @param: args - contains all arguments after str in printk
+
+    (for now only expect for %s, not handling for %05s or else)
+*/
 void handleStringSym(const char *modifiers, va_list *args){
-
+    const char *str = va_arg(*args, char*);
+    for(; *str != 0; str++){
+        chrToScreen(*str, WHITE);
+    }
 }
-void handleCharSym(const char *modifiers, va_list *args){
 
+/*
+    @param: modifiers - will be a string of modifiers and c at the end (ex. 05c for %05c)
+    @param: args - contains all arguments after str in printk
+
+    (for now only expect for %c, not handling for %05c or else)
+*/
+void handleCharSym(const char *modifiers, va_list *args){
+    chrToScreen((char)va_arg(*args, int), WHITE);
 }
 void handleUnsignedHexSym(const char *modifiers, va_list *args){
 

@@ -4,8 +4,6 @@
 #include <stdbool.h>
 #include <stdarg.h>
 
-#define PERCENT_SYM '%'
-
 typedef void (*HandlerFunc)(const char*, va_list*);
 
 typedef enum {

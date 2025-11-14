@@ -9,6 +9,9 @@
 #define VGA_HEIGHT 25
 #define MAX_OFFSET (VGA_WIDTH * VGA_HEIGHT)
 
+#define PERCENT_SIGN '%'
+#define NEW_LINE '\n'
+
 typedef enum VGA_COLOR {
     BLACK,
     BLUE,
