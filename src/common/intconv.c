@@ -3,39 +3,6 @@
 #include <stdint.h>
 
 /**
- * Convert an unsigned integer to a decimal string.
- *
- * @param num  The number to convert.
- * @param buf  The buffer to write into. Must be large enough.
- * @return     Pointer to the buffer.
- */
-const char* utoa(uint32_t n, char* buf) {
-    return num_to_str(n, buf, DECIMAL_BASE, 0);
-}
-
-/**
- * Convert a signed integer to a decimal string.
- *
- * @param n    The number to convert.
- * @param buf  The buffer to write into. Must be large enough.
- * @return     Pointer to the buffer.
- */const char* itoa(int32_t n, char* buf) {
-    return num_to_str(n, buf, DECIMAL_BASE, 1);
-}
-
-/**
- * Convert an unsigned integer to a hexadecimal string.
- *
- * @param num  The number to convert.
- * @param buf  The buffer to write into. Must be large enough.
- * @return     Pointer to the buffer.
- */
- const char* uint_to_hex(uint32_t n, char* buf) {
-    return num_to_str(n, buf, HEX_BASE, 0);
-}
-
-
-/**
  * General number-to-string converter.
  *
  * @param num       The number to convert (unsigned).
@@ -80,3 +47,34 @@ const char* utoa(uint32_t n, char* buf) {
     return buf;
 }
 
+/**
+ * Convert an unsigned integer to a decimal string.
+ *
+ * @param num  The number to convert.
+ * @param buf  The buffer to write into. Must be large enough.
+ * @return     Pointer to the buffer.
+ */
+const char* utoa(uint32_t n, char* buf) {
+    return num_to_str(n, buf, DECIMAL_BASE, 0);
+}
+
+/**
+ * Convert a signed integer to a decimal string.
+ *
+ * @param n    The number to convert.
+ * @param buf  The buffer to write into. Must be large enough.
+ * @return     Pointer to the buffer.
+ */const char* itoa(int32_t n, char* buf) {
+    return num_to_str(n, buf, DECIMAL_BASE, 1);
+}
+
+/**
+ * Convert an unsigned integer to a hexadecimal string.
+ *
+ * @param num  The number to convert.
+ * @param buf  The buffer to write into. Must be large enough.
+ * @return     Pointer to the buffer.
+ */
+ const char* xtoa(uint32_t n, char* buf) {
+    return num_to_str(n, buf, HEX_BASE, 0);
+}

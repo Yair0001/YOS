@@ -12,7 +12,7 @@
 #define PERCENT_SIGN '%'
 #define NEW_LINE '\n'
 
-typedef enum VGA_COLOR {
+typedef enum VGA_COLOR : uint8_t {
     BLACK,
     BLUE,
     GREEN,
@@ -31,11 +31,17 @@ typedef enum VGA_COLOR {
     WHITE
 } VGA_COLOR;
 
+struct PixelVGA{
+    char ch;
+    VGA_COLOR color;
+};
+
 struct Screen{
-    volatile char* screen;
+    volatile struct PixelVGA* pixels;
     uint32_t       offset;
 };
 
 void printk(const char *, ...);
 void chrToScreen(char chr, VGA_COLOR color);
+void strToScreen(const char *str, VGA_COLOR color);
 void updateOffset();

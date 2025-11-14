@@ -4,6 +4,10 @@
 #include <stdint.h>
 
 void handleSignedIntSym(const char *modifiers, va_list *args){
+    uint32_t n = va_arg(*args,uint32_t);
+    char buf[32];
+    const char *strNum = itoa(n, buf);
+    strToScreen(strNum, WHITE);
 }
 
 /*
@@ -16,9 +20,14 @@ void handleUnsignedIntSym(const char *modifiers, va_list *args){
     uint32_t n = va_arg(*args,uint32_t);
     char buf[32];
     const char *strNum = utoa(n, buf);
-    for(; *strNum!=0; strNum++){
-        chrToScreen(*strNum, WHITE);
-    }
+    strToScreen(strNum, WHITE);
+}
+
+void handleUnsignedHexSym(const char *modifiers, va_list *args){
+    uint32_t n = va_arg(*args,uint32_t);
+    char buf[32];
+    const char *strNum = xtoa(n, buf);
+    strToScreen(strNum, WHITE);
 }
 
 /*
@@ -29,9 +38,7 @@ void handleUnsignedIntSym(const char *modifiers, va_list *args){
 */
 void handleStringSym(const char *modifiers, va_list *args){
     const char *str = va_arg(*args, char*);
-    for(; *str != 0; str++){
-        chrToScreen(*str, WHITE);
-    }
+    strToScreen(str, WHITE);
 }
 
 /*
@@ -43,18 +50,20 @@ void handleStringSym(const char *modifiers, va_list *args){
 void handleCharSym(const char *modifiers, va_list *args){
     chrToScreen((char)va_arg(*args, int), WHITE);
 }
-void handleUnsignedHexSym(const char *modifiers, va_list *args){
 
-}
-void handlePointerSym(const char *modifiers, va_list *args){
-
+void handlePointerSym(const char *modifiers, va_list *args) {
+    void* ptr = va_arg(*args, void*);
+    uintptr_t addr = (uintptr_t)ptr;
+    char buf[32];
+    const char* strNum = xtoa(addr, buf);
+    strToScreen(strNum, WHITE);
 }
 
 /*
     will just contain stuff after % that was invalid so i want to print as string.
 */
 void defaultHandler(const char *str, va_list *args){
-    handleStringSym(str, args);
+    strToScreen(str, WHITE);
 }
 
 static SymbolHandler symHandlers[] = {

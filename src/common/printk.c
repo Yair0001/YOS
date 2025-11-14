@@ -2,20 +2,38 @@
 #include "printk.h"
 #include "symbol.h"
 
-struct Screen vgaScreen = {
-    .screen = (volatile char*)VGA_ADDR,
+static struct Screen vgaScreen = {
+    .pixels = (volatile struct PixelVGA*)VGA_ADDR,
     .offset = 0
 };
 
-void updateOffset(){
-    if (vgaScreen.offset == MAX_OFFSET) vgaScreen.offset = 0;
-    vgaScreen.offset++;
+void newLineToScreen() {
+    uint32_t line = vgaScreen.offset / VGA_WIDTH;
+    vgaScreen.offset = (line + 1) * VGA_WIDTH;
+    if (vgaScreen.offset >= MAX_OFFSET)
+        vgaScreen.offset = 0;
 }
 
-void chrToScreen(char chr, VGA_COLOR color){
-    *vgaScreen.screen++ = chr;
-    *vgaScreen.screen++ = color;
+void updateOffset() {
+    vgaScreen.offset++;
+    if (vgaScreen.offset >= MAX_OFFSET) vgaScreen.offset = 0;
+}
+
+void chrToScreen(char ch, VGA_COLOR color){
+    if(ch == NEW_LINE){
+        newLineToScreen();
+        return;
+    }
+
+    vgaScreen.pixels[vgaScreen.offset].ch = ch;
+    vgaScreen.pixels[vgaScreen.offset].color = color;
     updateOffset();
+}
+
+void strToScreen(const char *str, VGA_COLOR color){
+    for(; *str != 0; str++){
+        chrToScreen(*str, color);
+    }
 }
 
 void printk(const char *str, ...){
@@ -28,7 +46,8 @@ void printk(const char *str, ...){
                 parseSym(str++, &args);
                 break;
             case NEW_LINE:
-                
+                newLineToScreen();
+                break;
             default:
                 chrToScreen(*str, WHITE);
         }

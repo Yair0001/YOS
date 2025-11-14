@@ -10,4 +10,3 @@
 const char* itoa(int32_t n, char* buf);
 const char* utoa(uint32_t n, char* buf);
 const char* xtoa(uint32_t n, char* buf);
-static const char* num_to_str(int64_t num, char* buf, int base, int is_signed);
