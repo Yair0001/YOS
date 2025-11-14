@@ -16,7 +16,8 @@ void load_kern(){
 }
 
 void stage2_main(){
-    printk("asdf\nadsf\nadsf\nasd");
+    printk("123%c123",1);
+
     while(1);
 }
 

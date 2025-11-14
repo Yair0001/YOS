@@ -52,4 +52,5 @@ void printk(const char *str, ...){
                 chrToScreen(*str, WHITE);
         }
     }
+    va_end(args);
 }

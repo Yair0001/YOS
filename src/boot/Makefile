@@ -1,23 +1,21 @@
-#### BOOTLOADER
-#### Gets BIN & BOOT_BIN & BUILD
+.PHONY: all clean stage1 stage2
 
 STAGE1_BIN = $(BIN)/stage1.bin
 STAGE2_BIN = $(BIN)/stage2.bin
+BOOT_BIN = $(BIN)/boot.bin
 
-all: $(BOOT_BIN)
+all: stage1 stage2
+	cat $(STAGE1_BIN) $(STAGE2_BIN) > $(BOOT_BIN)
 
-$(BOOT_BIN): $(STAGE1_BIN) $(STAGE2_BIN)
-	cp $< $@
-	cat $(word 2, $^) >> $@
-	dd if=/dev/zero bs=512 count=8 >> $@
-
-$(STAGE1_BIN):
+stage1:
 	$(MAKE) -C stage1
 
-$(STAGE2_BIN):
+stage2:
 	$(MAKE) -C stage2
 
 clean:
 	$(MAKE) -C stage1 clean
 	$(MAKE) -C stage2 clean
-	rm -f $(BOOT_BIN)
+	rm -fr $(BOOT_BIN)
+
+.DEFAULT_GOAL := all

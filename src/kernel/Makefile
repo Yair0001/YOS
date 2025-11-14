@@ -1,25 +1,27 @@
-#### KERNEL
-#### Gets KERN_BIN & BIN & BUILD & LD & CC from parent Makefile
+OUTPUT = $(BIN)/kernel.bin
 
-KERN_ELF = $(BUILD)/kernel.elf
-KERN_BUILD = $(BUILD)/kernel.o
-KERN_SRC = main.c
-KERN_LINKER = linker.ld
+C_SRC = main.c
+COMMON_OBJS = $(BUILD)/common/intconv.o $(BUILD)/common/printk.o $(BUILD)/common/symbol.o
 
-LD_FLAGS = -m elf_i386 -T $(KERN_LINKER) -nostdlib
+C_OBJS = $(BUILD)/kernel/main.o
 
-all: $(KERN_BIN)
+ALL_OBJS = $(C_OBJS) $(COMMON_OBJS)
 
-$(KERN_BIN): 
+all: $(OUTPUT)
 
-$(KERN_BIN): $(KERN_ELF)
-	i686-elf-objcopy -O binary $< $@
+$(BUILD)/kernel:
+	@mkdir -p $(BUILD)/kernel
 
-$(KERN_ELF): $(KERN_BUILD)
-	$(LD) $(LD_FLAGS) $< -o $@
+$(BUILD)/kernel/main.o: main.c main.h | $(BUILD)/kernel
+	$(CC) $(CC_FLAGS) -c main.c -o $(BUILD)/kernel/main.o
 
-$(KERN_BUILD): $(KERN_SRC)
-	$(CC) $(CC_FLAGS) -c $< -o $@
+$(OUTPUT): $(ALL_OBJS) linker.ld
+	$(LD) $(LD_FLAGS) $(ALL_OBJS) -o $(OUTPUT)
+	@echo "Kernel built: $(OUTPUT)"
 
 clean:
-	rm -fr $(KERN_BUILD) $(KERN_ELF)
+	rm -rf $(BIN)/kernel
+	rm -rf $(BUILD)/kernel
+	rm -f $(OUTPUT)
+
+.PHONY: all clean

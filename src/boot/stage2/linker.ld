@@ -1,9 +1,13 @@
 ENTRY(_start)
 OUTPUT_FORMAT("binary")
-SECTIONS {
+SECTIONS
+{
     . = 0x7e00;
-    .text        : { *(.text) }
-    .data        : { *(.data) }
-    .rodata      : { *(.rodata) }
-    .bss         : { *(.bss) }
+    .entry       : { __entry_start = .;     *(.entry)   }
+    .text        : { __text_start = .;      *(.text)    }
+    .data        : { __data_start = .;      *(.data)    }
+    .rodata      : { __rodata_start = .;    *(.rodata)  }
+    .bss         : { __bss_start = .;       *(.bss)     }
+
+    __end = .;
 }
