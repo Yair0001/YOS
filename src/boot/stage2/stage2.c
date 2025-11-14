@@ -1,8 +1,7 @@
 #include "stage2.h"
+#include "../../common/printk.h"
 
 void stage2_main(){
-    volatile char *screen = (volatile char*)0xB8000;
-    *screen = 'S';
-    *(screen+1) = 1;
+    printk("asdf\nadsf\nadsf\nasd");
     while(1);
 }
