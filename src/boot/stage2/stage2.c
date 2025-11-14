@@ -1,4 +1,5 @@
 #include "stage2.h"
+#include "../../common/printk.h"
 #include "disk/disk.h"
 
 void load_kern(){
@@ -15,5 +16,7 @@ void load_kern(){
 }
 
 void stage2_main(){
-    load_kern();
+    printk("asdf\nadsf\nadsf\nasd");
+    while(1);
 }
+
