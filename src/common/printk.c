@@ -43,14 +43,21 @@ void printk(const char *str, ...){
     for(; *str != 0; str++){
         switch (*str) {
             case PERCENT_SIGN:
-                parseSym(str++, &args);
+                str++;
+                if (*str == 0) break; 
+                
+                parseSym(str, &args);
                 break;
+                
             case NEW_LINE:
                 newLineToScreen();
                 break;
+                
             default:
                 chrToScreen(*str, WHITE);
+                break;
         }
     }
+    
     va_end(args);
 }

@@ -4,7 +4,7 @@ CODE_OFFSET equ 0x8
 DATA_OFFSET equ 0x10
 
 global _start
-extern stage2_main
+extern kern_main
 
 _start:
 
@@ -61,4 +61,4 @@ PModeMain:
     mov ebp, 0x9c00
     mov esp, ebp
     
-   jmp stage2_main
+   jmp kern_main

@@ -1,6 +1,3 @@
-#ifndef KERNEL_H
-#define KERNEL_H
+#pragma once
 
-void kern_entry();
-
-#endif
+void kern_main();

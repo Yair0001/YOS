@@ -1,21 +1,23 @@
-.PHONY: all clean stage1 stage2
 
 STAGE1_BIN = $(BIN)/stage1.bin
-STAGE2_BIN = $(BIN)/stage2.bin
-BOOT_BIN = $(BIN)/boot.bin
+STAGE1_SRC = stage1.asm
+KERNEL_SECTORS_FILE = $(BUILD)/kernel_sectors.txt
 
-all: stage1 stage2
-	cat $(STAGE1_BIN) $(STAGE2_BIN) > $(BOOT_BIN)
+all: $(STAGE1_BIN)
 
-stage1:
-	$(MAKE) -C stage1
-
-stage2:
-	$(MAKE) -C stage2
+$(STAGE1_BIN): $(STAGE1_SRC)
+	@echo "ASM: $<"
+	@mkdir -p $(BIN)
+	@if [ -f "$(KERNEL_SECTORS_FILE)" ]; then \
+		KERNEL_SECTORS=$$(cat $(KERNEL_SECTORS_FILE)); \
+		echo "Building stage1 with KERNEL_SECTORS=$$KERNEL_SECTORS"; \
+		$(ASM) -f bin -DKERNEL_SECTORS=$$KERNEL_SECTORS $< -o $@; \
+	else \
+		echo "Building stage1 without KERNEL_SECTORS (using fallback)"; \
+		$(ASM) -f bin $< -o $@; \
+	fi
 
 clean:
-	$(MAKE) -C stage1 clean
-	$(MAKE) -C stage2 clean
-	rm -fr $(BOOT_BIN)
+	rm -f $(STAGE1_BIN)
 
-.DEFAULT_GOAL := all
+.PHONY: all clean

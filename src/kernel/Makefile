@@ -1,27 +1,43 @@
-OUTPUT = $(BIN)/kernel.bin
+# Kernel Makefile
 
-C_SRC = main.c
-COMMON_OBJS = $(BUILD)/common/intconv.o $(BUILD)/common/printk.o $(BUILD)/common/symbol.o
+BUILD_DIR = $(BUILD)/kernel
+KERNEL_BIN = $(BIN)/kernel.bin
+LINKER_SCRIPT = linker.ld
 
-C_OBJS = $(BUILD)/kernel/main.o
+ASM_SRCS = $(wildcard *.asm)
+C_SRCS = $(wildcard *.c)
 
-ALL_OBJS = $(C_OBJS) $(COMMON_OBJS)
+ASM_OBJS = $(patsubst %.asm,$(BUILD_DIR)/%.o,$(ASM_SRCS))
+C_OBJS = $(patsubst %.c,$(BUILD_DIR)/%.o,$(C_SRCS))
+KERNEL_OBJS = $(ASM_OBJS) $(C_OBJS)
 
-all: $(OUTPUT)
+COMMON_OBJS = $(wildcard $(BUILD)/common/*.o)
 
-$(BUILD)/kernel:
-	@mkdir -p $(BUILD)/kernel
+KERNEL_FULL_OBJ = $(BUILD_DIR)/kernel_full.o
 
-$(BUILD)/kernel/main.o: main.c main.h | $(BUILD)/kernel
-	$(CC) $(CC_FLAGS) -c main.c -o $(BUILD)/kernel/main.o
+all: $(KERNEL_BIN)
 
-$(OUTPUT): $(ALL_OBJS) linker.ld
-	$(LD) $(LD_FLAGS) $(ALL_OBJS) -o $(OUTPUT)
-	@echo "Kernel built: $(OUTPUT)"
+$(BUILD_DIR)/%.o: %.asm | $(BUILD_DIR)
+	@echo "ASM: $<"
+	$(ASM) -f elf -g $< -o $@
+
+$(BUILD_DIR)/%.o: %.c | $(BUILD_DIR)
+	@echo "CC: $<"
+	$(CC) $(CC_FLAGS) -c $< -o $@
+
+$(KERNEL_FULL_OBJ): $(KERNEL_OBJS) $(COMMON_OBJS)
+	@echo "LD: Relocating kernel objects"
+	$(LD) -g -relocatable $^ -o $@
+
+$(KERNEL_BIN): $(KERNEL_FULL_OBJ) $(LINKER_SCRIPT)
+	@echo "LD: Linking kernel binary"
+	@mkdir -p $(BIN)
+	$(CC) $(CC_FLAGS) -T $(LINKER_SCRIPT) -o $@ $(KERNEL_FULL_OBJ)
+
+$(BUILD_DIR):
+	@mkdir -p $@
 
 clean:
-	rm -rf $(BIN)/kernel
-	rm -rf $(BUILD)/kernel
-	rm -f $(OUTPUT)
+	rm -rf $(BUILD_DIR) $(KERNEL_BIN)
 
 .PHONY: all clean
