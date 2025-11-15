@@ -9,3 +9,5 @@
 /*.bin
 
 .DS_Store
+
+*.old

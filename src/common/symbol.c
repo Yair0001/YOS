@@ -82,33 +82,31 @@ static SymbolMap symMap = {
 
 
 FullSymbol getSym(const char *str){
-    char* modifiers = "";
+    static char modifiers[32];
+    int mod_idx = 0;
     Symbol type = UNDEFINED;
-    for(; *str != 0; str++){
-        switch ((Symbol) *str) {
+    
+    for(; *str != 0 && mod_idx < 31; str++){
+        Symbol current = (Symbol) *str;
+        
+        switch (current) {
             case SIGNED_INT:
-                type = SIGNED_INT;
-                break;
             case UNSIGNED_INT:
-                type = UNSIGNED_INT;
-                break;
             case STRING:
-                type = STRING;
-                break;
             case CHAR:
-                type = CHAR;
-                break;
             case UNSIGNED_HEX:
-                type = UNSIGNED_HEX;
-                break;
             case POINTER:
-                type = POINTER;
-                break;
+                type = current;
+                modifiers[mod_idx] = '\0';
+                return (FullSymbol){type, modifiers};
+                
             default:
-                type = UNDEFINED;
+                modifiers[mod_idx++] = *str;
+                break;
         }
-        if (type == UNDEFINED) modifiers += *str;
     }
+    
+    modifiers[mod_idx] = '\0';
     return (FullSymbol){type, modifiers};
 }
 

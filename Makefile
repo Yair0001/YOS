@@ -1,82 +1,96 @@
-# ================= CONFIG =======================
-ASM              = nasm
-CC               = i686-elf-gcc
-LD               = i686-elf-ld
 
-CFLAGS           = -g -ffreestanding -nostdlib -nostartfiles -nodefaultlibs -Wall -O0 -I./src/common
-ASMFLAGS         = -f elf -g
+.PHONY: all clean stage1 kernel common run debug verify
+.DEFAULT_GOAL := all
 
-BUILD_DIR        = build
-BIN_DIR          = bin
+SRC    = $(abspath src/)
+BIN    = $(abspath bin/)
+BUILD  = $(abspath build/)
+COMMON = $(abspath src/common/)
 
-STAGE1_SRC       = src/boot/stage1/stage1.asm
-STAGE2_ASM_SRC   = src/boot/stage2/stage2.asm
-STAGE2_C_SRC     = src/boot/stage2/stage2.c
-LINKER_SCRIPT    = src/boot/linker.ld
+BOOT_DIR   = $(SRC)/boot
+KERNEL_DIR = $(SRC)/kernel
 
-STAGE1_BIN       = $(BIN_DIR)/stage1.bin
-STAGE2_BIN       = $(BIN_DIR)/stage2.bin
-OS_IMAGE         = $(BIN_DIR)/os.bin
+ASM = nasm
+CC  = i686-elf-gcc
+LD  = i686-elf-ld
 
-STAGE2_ASM_OBJ   = $(BUILD_DIR)/stage2.asm.o
-STAGE2_C_OBJ     = $(BUILD_DIR)/stage2.o
-STAGE2_OBJ       = $(BUILD_DIR)/stage2_full.o
+CC_FLAGS = -g -ffreestanding -nostdlib -nostartfiles -nodefaultlibs -Wall -O0 -I$(COMMON)
+LD_FLAGS = -m elf_i386
 
-# Auto-include all src/common/*.c
-COMMON_SRCS      := $(wildcard src/common/*.c)
-COMMON_OBJS      := $(patsubst src/common/%.c, $(BUILD_DIR)/%.o, $(COMMON_SRCS))
+export SRC BIN ASM BUILD CC LD CC_FLAGS LD_FLAGS
 
-# Colors
-OK   = \033[32m[OK]\033[0m
-CCL  = \033[36m[CC]\033[0m
-ASMCL= \033[35m[ASM]\033[0m
-LDCL = \033[33m[LD]\033[0m
 
-# ================= TARGETS ======================
+QEMU       = qemu-system-i386
+QEMU_FLAGS = -drive file=
+QEMU_FMT   = ,format=raw
 
-.PHONY: all clean run dirs
 
-all: dirs $(OS_IMAGE)
+OS_BIN     = $(BIN)/os.bin
+STAGE1_BIN = $(BIN)/stage1.bin
+KERNEL_BIN = $(BIN)/kernel.bin
 
-run: $(OS_IMAGE)
-	qemu-system-x86_64 -hda $(OS_IMAGE)
+KERNEL_SECTORS_FILE = $(BUILD)/kernel_sectors.txt
 
-dirs:
-	@mkdir -p $(BUILD_DIR) $(BIN_DIR)
+get_file_size = $(shell stat -f%z "$(1)" 2>/dev/null || stat -c%s "$(1)" 2>/dev/null)
 
-# -------- COMMON C FILES (auto detected) --------
-$(BUILD_DIR)/%.o: src/common/%.c
-	@echo "$(CCL) $<"
-	$(CC) $(CFLAGS) -c $< -o $@
+calc_sectors = $(shell echo $$((($(call get_file_size,$(1)) + 511) / 512)))
 
-# -------- STAGE 1 BOOTLOADER --------
-$(STAGE1_BIN): $(STAGE1_SRC)
-	@echo "$(ASMCL) $<"
-	$(ASM) -f bin $< -o $@
 
-# -------- STAGE 2 OBJECTS --------
-$(STAGE2_ASM_OBJ): $(STAGE2_ASM_SRC)
-	@echo "$(ASMCL) $<"
-	$(ASM) $(ASMFLAGS) $< -o $@
+all: $(OS_BIN)
 
-$(STAGE2_C_OBJ): $(STAGE2_C_SRC)
-	@echo "$(CCL) $<"
-	$(CC) $(CFLAGS) -c $< -o $@
+common:
+	@echo "=== Building common utilities ==="
+	$(MAKE) -C $(COMMON)
 
-$(STAGE2_OBJ): $(STAGE2_ASM_OBJ) $(STAGE2_C_OBJ) $(COMMON_OBJS)
-	@echo "$(LDCL) Relocating stage2 objects"
-	$(LD) -g -relocatable $^ -o $@
+kernel: common
+	@echo "=== Building kernel ==="
+	$(MAKE) -C $(KERNEL_DIR)
 
-$(STAGE2_BIN): $(STAGE2_OBJ) $(LINKER_SCRIPT)
-	@echo "$(LDCL) Linking stage2"
-	$(CC) $(CFLAGS) -T $(LINKER_SCRIPT) -o $@ $(STAGE2_OBJ)
+$(KERNEL_SECTORS_FILE): kernel
+	@mkdir -p $(BUILD)
+	@KERNEL_SIZE=$(call get_file_size,$(KERNEL_BIN)); \
+	KERNEL_SECTORS=$(call calc_sectors,$(KERNEL_BIN)); \
+	echo "Kernel size: $${KERNEL_SIZE} bytes ($$KERNEL_SECTORS sectors)"; \
+	echo $$KERNEL_SECTORS > $@
 
-# -------- FINAL DISK IMAGE --------
-$(OS_IMAGE): $(STAGE1_BIN) $(STAGE2_BIN)
-	@echo "Building final OS image"
-	cat $^ > $@
-	dd if=/dev/zero bs=512 count=8 >> $@ 2>/dev/null
+stage1: $(KERNEL_SECTORS_FILE)
+	@echo "=== Building stage1 bootloader ==="
+	$(MAKE) -C $(BOOT_DIR)
 
-# -------- CLEAN --------
+$(OS_BIN): stage1 kernel
+	@mkdir -p $(BIN)
+	@echo "=== Assembling OS image ==="
+	cat $(STAGE1_BIN) $(KERNEL_BIN) > $@
+	@echo "Total OS size: $(call get_file_size,$@) bytes"
+	@echo "OS binary created: $(OS_BIN)"
+
+
 clean:
-	rm -rf $(BIN_DIR) $(BUILD_DIR)
+	@echo "=== Cleaning build artifacts ==="
+	$(MAKE) -C $(BOOT_DIR) clean
+	$(MAKE) -C $(COMMON) clean
+	$(MAKE) -C $(KERNEL_DIR) clean
+	rm -rf $(BIN) $(BUILD)
+	@echo "Clean complete"
+
+run: $(OS_BIN)
+	@echo "=== Running OS in QEMU ==="
+	$(QEMU) $(QEMU_FLAGS)$(OS_BIN)$(QEMU_FMT) -boot c
+
+debug: $(OS_BIN)
+	@echo "=== Running OS in QEMU (debug mode) ==="
+	$(QEMU) $(QEMU_FLAGS)$(OS_BIN)$(QEMU_FMT) -boot c -d int -no-reboot
+
+verify: $(OS_BIN)
+	@echo "=== Verifying OS Image ==="
+	@echo "Total size: $(call get_file_size,$(OS_BIN)) bytes"
+	@echo ""
+	@echo "First 512 bytes (stage1 bootloader):"
+	@hexdump -C $(OS_BIN) | head -n 33
+	@echo ""
+	@echo "Boot signature at offset 510-511 (should be 55 AA):"
+	@dd if=$(OS_BIN) bs=1 skip=510 count=2 2>/dev/null | hexdump -C
+	@echo ""
+	@if [ -f "$(KERNEL_SECTORS_FILE)" ]; then \
+		echo "Kernel sectors: $$(cat $(KERNEL_SECTORS_FILE))"; \
+	fi
