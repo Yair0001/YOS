@@ -37,7 +37,7 @@ struct PixelVGA{
 };
 
 struct Screen{
-    volatile struct PixelVGA* pixels;
+    volatile struct PixelVGA *pixels;
     uint32_t                  offset;
 };
 
