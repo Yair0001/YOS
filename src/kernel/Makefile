@@ -5,18 +5,15 @@ ISR_BUILD_DIR = $(BUILD)/kernel/isr
 KERNEL_BIN = $(BIN)/kernel.bin
 LINKER_SCRIPT = linker.ld
 
-# Source files in kernel directory
 ASM_SRCS = $(wildcard *.asm)
 C_SRCS = $(wildcard *.c)
 
-# Source files in isr subdirectory
 ISR_ASM_SRCS = $(wildcard isr/*.asm)
 ISR_C_SRCS = $(wildcard isr/*.c)
 
-# Object files
 ASM_OBJS = $(patsubst %.asm,$(BUILD_DIR)/%.o,$(ASM_SRCS))
 C_OBJS = $(patsubst %.c,$(BUILD_DIR)/%.o,$(C_SRCS))
-# Give ISR assembly files _asm suffix to avoid conflict with C files
+
 ISR_ASM_OBJS = $(patsubst isr/%.asm,$(ISR_BUILD_DIR)/%_asm.o,$(ISR_ASM_SRCS))
 ISR_C_OBJS = $(patsubst isr/%.c,$(ISR_BUILD_DIR)/%.o,$(ISR_C_SRCS))
 
@@ -36,7 +33,6 @@ $(BUILD_DIR)/%.o: %.c | $(BUILD_DIR)
 	@echo "CC: $<"
 	$(CC) $(CC_FLAGS) -c $< -o $@
 
-# Static pattern rules for ISR files
 $(ISR_ASM_OBJS): $(ISR_BUILD_DIR)/%_asm.o: isr/%.asm
 	@echo "ASM: $<"
 	@mkdir -p "$(ISR_BUILD_DIR)"

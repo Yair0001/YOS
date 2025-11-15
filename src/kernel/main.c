@@ -2,14 +2,10 @@
 #include "../common/printk.h"
 #include "idt.h"
 
-// Uncomment to test divide-by-zero exception handler
-// #define TEST_DIVIDE_BY_ZERO
-
 void kern_main(){
     printk("Welcome to YOS!\n");
     printk("Kernel loaded at 0x7E00\n");
 
-    // Initialize Interrupt Descriptor Table
     initIDT();
 
     printk("System ready.\n");
