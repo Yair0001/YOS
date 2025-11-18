@@ -1,28 +1,32 @@
 #pragma once
-#include "types.h"
+
+#include <stddef.h>
 #include <stdbool.h>
 
+#define SIZE_MAX ((size_t)-1)
+
+#define CHECK_NULL_PTR(ptr) do { \
+   if ((ptr) == NULL) return NULL_PTR; \
+} while(0)
+
+#define CHECK_BUFFER_SIZE(size) do { \
+   if ((size) == 0) return INVALID_PARAM; \
+} while(0)
+
 typedef enum {
-    EQUAL = 0,
-    LESS  = -1,
-    GREATER = 1
-} cmpRes;
+   SUCCESS = 0,
+   NULL_PTR = -1,
+   BUFFER_TOO_SMALL = -2,
+   INVALID_PARAM = -3
+} string_result_t;
 
-size_t strlen(const char *str);
+size_t strlen_s(const char *str);
+string_result_t strncpy_s(char *dest, size_t dest_size, const char *src, size_t count);
+string_result_t strncat_s(char *dest, size_t dest_size, const char *src, size_t count);
+int strncmp_s(const char *str1, const char *str2, size_t count);
 
-char *strncat(char *dest, const char *src, size_t n);
-char *strcat(char *str1, const char *str2);
+int memcmp_s(const void *ptr1, const void *ptr2, size_t count);
+string_result_t memcpy_s(void *dest, size_t dest_size, const void *src, size_t count);
+string_result_t memmove_s(void *dest, size_t dest_size, const void *src, size_t count);
+string_result_t memset_s(void *ptr, size_t ptr_size, int value, size_t count);
 
-char *strncpy(char *dest, const char *src, size_t n);
-char *strcpy(char *dest, const char *src);
-
-cmpRes strncmp(const char *str1, const char *str2, size_t n);
-cmpRes strcmp(const char *str1, const char *str2);
-
-char *strtok(char *str, const char *delim);
-
-cmpRes memcmp(const void *m1, const void *m2, size_t size);
-void *memchr(const void *str, int c, size_t n);
-void *memcpy(void *dest, const void *src, size_t n);
-void *memmove(void *dest, const void *src, size_t n);
-void *memset(void *str, int c, size_t n);
