@@ -5,7 +5,7 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-
+  workflow_dispatch:
 
 jobs:
   build:
@@ -14,13 +14,20 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-          
+
       - name: Cache i686 cross toolchain
         id: cross-cache
         uses: actions/cache@v4
         with:
           key: i686-cross-v1.0.0
-          path: $HOME/opt/cross
+          path: ${{ env.HOME }}/opt/cross
+
+      - name: Cache GCC + Binutils sources
+        id: source-cache
+        uses: actions/cache@v4
+        with:
+          key: i686-src-v1.0.0
+          path: ${{ env.HOME }}/src
 
       - name: Install dependencies
         if: steps.cross-cache.outputs.cache-hit != 'true'
@@ -37,7 +44,7 @@ jobs:
             wget
 
       - name: Download sources
-        if: steps.cross-cache.outputs.cache-hit != 'true'
+        if: steps.source-cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p $HOME/src
           cd $HOME/src
@@ -52,7 +59,7 @@ jobs:
       - name: Build binutils
         if: steps.cross-cache.outputs.cache-hit != 'true'
         run: |
-          export PREFIX="$HOME/opt/cross"
+          export PREFIX="${HOME}/opt/cross"
           export TARGET=i686-elf
           export PATH="$PREFIX/bin:$PATH"
 
@@ -72,16 +79,15 @@ jobs:
       - name: Build GCC
         if: steps.cross-cache.outputs.cache-hit != 'true'
         run: |
-          export PREFIX="$HOME/opt/cross"
+          export PREFIX="${HOME}/opt/cross"
           export TARGET=i686-elf
           export PATH="$PREFIX/bin:$PATH"
-          
-          echo "Checking if $TARGET-as is in PATH..."
+
+          # Fail if assembler is missing
           which -- $TARGET-as || { echo "ERROR: $TARGET-as is NOT in PATH"; exit 1; }
-          
-          cd $HOME/src
-          mkdir -p build-gcc
-          cd build-gcc
+
+          mkdir -p $HOME/src/build-gcc
+          cd $HOME/src/build-gcc
 
           ../gcc-15.2.0/configure \
             --target=$TARGET \
@@ -99,7 +105,7 @@ jobs:
           make install-target-libstdc++-v3
 
       - name: Add cross compiler to PATH
-        run: echo "$HOME/opt/cross/bin" >> $GITHUB_PATH
+        run: echo "${HOME}/opt/cross/bin" >> $GITHUB_PATH
 
       - name: Verify toolchain
         run: |
@@ -110,5 +116,3 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y qemu-system-i386
-
-        
