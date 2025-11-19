@@ -1,11 +1,19 @@
 #include <stdint.h>
-#include "printk.h"
+#include "io.h"
 #include "symbol.h"
 
 static struct Screen vgaScreen = {
     .pixels = (volatile struct PixelVGA*)VGA_ADDR,
     .offset = 0
 };
+
+void clear_screen(void) {
+    for (uint32_t i = 0; i < MAX_OFFSET; i++) {
+        vgaScreen.pixels[i].ch = ' ';
+        vgaScreen.pixels[i].color = BLACK;
+    }
+    vgaScreen.offset = 0;
+}
 
 void newLineToScreen() {
     uint32_t line = vgaScreen.offset / VGA_WIDTH;
@@ -39,25 +47,25 @@ void strToScreen(const char *str, VGA_COLOR color){
 void printk(const char *str, ...){
     va_list args;
     va_start(args, str);
-    
+
     for(; *str != 0; str++){
         switch (*str) {
             case PERCENT_SIGN:
                 str++;
-                if (*str == 0) break; 
-                
+                if (*str == 0) break;
+
                 parseSym(str, &args);
                 break;
-                
+
             case NEW_LINE:
                 newLineToScreen();
                 break;
-                
+
             default:
                 chrToScreen(*str, WHITE);
                 break;
         }
     }
-    
+
     va_end(args);
 }

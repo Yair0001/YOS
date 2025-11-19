@@ -37,10 +37,11 @@ struct PixelVGA{
 };
 
 struct Screen{
-    volatile struct PixelVGA* pixels;
+    volatile struct PixelVGA *pixels;
     uint32_t                  offset;
 };
 
+void clear_screen(void);
 void printk(const char *, ...);
 void chrToScreen(char chr, VGA_COLOR color);
 void strToScreen(const char *str, VGA_COLOR color);

@@ -1,6 +1,6 @@
 #include "symbol.h"
 #include "../common/intconv.h"
-#include "../common/printk.h"
+#include "../common/io.h"
 #include <stdint.h>
 
 void handleSignedIntSym(const char *modifiers, va_list *args){
