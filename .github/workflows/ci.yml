@@ -1,0 +1,114 @@
+name: YOS CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+          
+      - name: Cache i686 cross toolchain
+        id: cross-cache
+        uses: actions/cache@v4
+        with:
+          key: i686-cross-v1.0.0
+          path: $HOME/opt/cross
+
+      - name: Install dependencies
+        if: steps.cross-cache.outputs.cache-hit != 'true'
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            build-essential \
+            bison \
+            flex \
+            libgmp3-dev \
+            libmpc-dev \
+            libmpfr-dev \
+            texinfo \
+            wget
+
+      - name: Download sources
+        if: steps.cross-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p $HOME/src
+          cd $HOME/src
+
+          # Change versions here
+          wget https://ftp.gnu.org/gnu/binutils/binutils-2.45.tar.gz
+          wget https://ftp.gnu.org/gnu/gcc/gcc-15.2.0/gcc-15.2.0.tar.gz
+
+          tar -xzf binutils-2.45.tar.gz
+          tar -xzf gcc-15.2.0.tar.gz
+
+      - name: Build binutils
+        if: steps.cross-cache.outputs.cache-hit != 'true'
+        run: |
+          export PREFIX="$HOME/opt/cross"
+          export TARGET=i686-elf
+          export PATH="$PREFIX/bin:$PATH"
+
+          mkdir -p $HOME/src/build-binutils
+          cd $HOME/src/build-binutils
+
+          ../binutils-2.45/configure \
+            --target=$TARGET \
+            --prefix="$PREFIX" \
+            --with-sysroot \
+            --disable-nls \
+            --disable-werror
+
+          make -j$(nproc)
+          make install
+
+      - name: Build GCC
+        if: steps.cross-cache.outputs.cache-hit != 'true'
+        run: |
+          export PREFIX="$HOME/opt/cross"
+          export TARGET=i686-elf
+          export PATH="$PREFIX/bin:$PATH"
+          
+          echo "Checking if $TARGET-as is in PATH..."
+          which -- $TARGET-as || { echo "ERROR: $TARGET-as is NOT in PATH"; exit 1; }
+          
+          cd $HOME/src
+          mkdir -p build-gcc
+          cd build-gcc
+
+          ../gcc-15.2.0/configure \
+            --target=$TARGET \
+            --prefix="$PREFIX" \
+            --disable-nls \
+            --enable-languages=c,c++ \
+            --without-headers \
+            --disable-hosted-libstdcxx
+
+          make all-gcc -j$(nproc)
+          make all-target-libgcc -j$(nproc)
+          make all-target-libstdc++-v3 -j$(nproc)
+          make install-gcc
+          make install-target-libgcc
+          make install-target-libstdc++-v3
+
+      - name: Add cross compiler to PATH
+        run: echo "$HOME/opt/cross/bin" >> $GITHUB_PATH
+
+      - name: Verify toolchain
+        run: |
+          i686-elf-gcc --version
+          i686-elf-ld --version
+
+      - name: Install QEMU
+        run: |
+          sudo apt update
+          sudo apt install -y qemu-system-i386
+
+        
