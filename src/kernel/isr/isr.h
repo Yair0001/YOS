@@ -1,6 +1,6 @@
 #pragma once
 #include <stdint.h>
-#include "../../common/printk.h"
+#include "../../common/io.h"
 #include "../../common/types.h"
 
 #define X(n) extern void isr##n();

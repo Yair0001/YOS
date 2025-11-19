@@ -2,7 +2,7 @@
 #include <stdint.h>
 
 #include "isr/isr.h"
-#include "../common/printk.h"
+#include "../common/io.h"
 #include "../common/types.h"
 
 
