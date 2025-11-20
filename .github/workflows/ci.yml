@@ -53,7 +53,8 @@ jobs:
             libmpc-dev \
             libmpfr-dev \
             texinfo \
-            wget
+            wget \
+            nasm
 
       - name: Download sources
         if: steps.source-cache.outputs.cache-hit != 'true'
