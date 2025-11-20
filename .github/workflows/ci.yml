@@ -69,8 +69,6 @@ jobs:
       - name: Build binutils
         if: steps.cross-cache.outputs.cache-hit != 'true'
         run: |
-          export PATH="/home/runner/opt/cross/bin:$PATH"
-
           mkdir -p /home/runner/src/build-binutils
           cd /home/runner/src/build-binutils
 
@@ -87,8 +85,6 @@ jobs:
       - name: Build GCC
         if: steps.cross-cache.outputs.cache-hit != 'true'
         run: |
-          export PATH="/home/runner/opt/cross/bin:$PATH"
-
           which -- i686-elf-as || { echo "ERROR: assembler missing"; exit 1; }
 
           mkdir -p /home/runner/src/build-gcc
