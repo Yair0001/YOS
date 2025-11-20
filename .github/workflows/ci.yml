@@ -12,8 +12,8 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      PREFIX: $HOME/opt/cross
-      SRCDIR: $HOME/src
+      PREFIX: /home/runner/opt/cross
+      SRCDIR: /home/runner/src
       TARGET: i686-elf
       BINUTILS_VERSION: 2.45
       GCC_VERSION: 15.2.0
@@ -24,22 +24,22 @@ jobs:
 
       - name: Ensure directories exist
         run: |
-          mkdir -p "$PREFIX"
-          mkdir -p "$SRCDIR"
+          mkdir -p /home/runner/opt/cross
+          mkdir -p /home/runner/src
 
       - name: Cache compiled cross toolchain
         id: cross-cache
         uses: actions/cache@v4
         with:
           key: cross-${{ env.TARGET }}-${{ env.BINUTILS_VERSION }}-${{ env.GCC_VERSION }}
-          path: $HOME/opt/cross
+          path: /home/runner/opt/cross
 
       - name: Cache downloaded GCC+Binutils sources
         id: source-cache
         uses: actions/cache@v4
         with:
           key: sources-${{ env.BINUTILS_VERSION }}-${{ env.GCC_VERSION }}
-          path: $HOME/src
+          path: /home/runner/src
 
       - name: Install dependencies
         if: steps.cross-cache.outputs.cache-hit != 'true'
@@ -58,7 +58,7 @@ jobs:
       - name: Download sources
         if: steps.source-cache.outputs.cache-hit != 'true'
         run: |
-          cd "$SRCDIR"
+          cd /home/runner/src
 
           wget https://ftp.gnu.org/gnu/binutils/binutils-${BINUTILS_VERSION}.tar.gz
           wget https://ftp.gnu.org/gnu/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz
@@ -69,13 +69,14 @@ jobs:
       - name: Build binutils
         if: steps.cross-cache.outputs.cache-hit != 'true'
         run: |
-          export PATH="$PREFIX/bin:$PATH"
-          mkdir -p "$SRCDIR/build-binutils"
-          cd "$SRCDIR/build-binutils"
+          export PATH="/home/runner/opt/cross/bin:$PATH"
+
+          mkdir -p /home/runner/src/build-binutils
+          cd /home/runner/src/build-binutils
 
           ../binutils-${BINUTILS_VERSION}/configure \
-            --target=$TARGET \
-            --prefix="$PREFIX" \
+            --target=i686-elf \
+            --prefix="/home/runner/opt/cross" \
             --with-sysroot \
             --disable-nls \
             --disable-werror
@@ -86,16 +87,16 @@ jobs:
       - name: Build GCC
         if: steps.cross-cache.outputs.cache-hit != 'true'
         run: |
-          export PATH="$PREFIX/bin:$PATH"
+          export PATH="/home/runner/opt/cross/bin:$PATH"
 
-          which -- $TARGET-as || { echo "ERROR: assembler missing"; exit 1; }
+          which -- i686-elf-as || { echo "ERROR: assembler missing"; exit 1; }
 
-          mkdir -p "$SRCDIR/build-gcc"
-          cd "$SRCDIR/build-gcc"
+          mkdir -p /home/runner/src/build-gcc
+          cd /home/runner/src/build-gcc
 
           ../gcc-${GCC_VERSION}/configure \
-            --target=$TARGET \
-            --prefix="$PREFIX" \
+            --target=i686-elf \
+            --prefix="/home/runner/opt/cross" \
             --disable-nls \
             --enable-languages=c,c++ \
             --without-headers \
@@ -109,7 +110,7 @@ jobs:
           make install-target-libstdc++-v3
 
       - name: Add cross compiler to PATH
-        run: echo "${PREFIX}/bin" >> $GITHUB_PATH
+        run: echo "/home/runner/opt/cross/bin" >> $GITHUB_PATH
 
       - name: Verify toolchain
         run: |
