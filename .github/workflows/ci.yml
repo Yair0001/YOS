@@ -1,5 +1,7 @@
 name: YOS CI
 
+# to do: ci doesnt work when merged to main so need to fix
+
 on:
   push:
     branches: [ main ]
