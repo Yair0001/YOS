@@ -11,23 +11,35 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      PREFIX: $HOME/opt/cross
+      SRCDIR: $HOME/src
+      TARGET: i686-elf
+      BINUTILS_VERSION: 2.45
+      GCC_VERSION: 15.2.0
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Cache i686 cross toolchain
+      - name: Ensure directories exist
+        run: |
+          mkdir -p "$PREFIX"
+          mkdir -p "$SRCDIR"
+
+      - name: Cache compiled cross toolchain
         id: cross-cache
         uses: actions/cache@v4
         with:
-          key: i686-cross-v1.0.0
-          path: ${{ env.HOME }}/opt/cross
+          key: cross-${{ env.TARGET }}-${{ env.BINUTILS_VERSION }}-${{ env.GCC_VERSION }}
+          path: $HOME/opt/cross
 
-      - name: Cache GCC + Binutils sources
+      - name: Cache downloaded GCC+Binutils sources
         id: source-cache
         uses: actions/cache@v4
         with:
-          key: i686-src-v1.0.0
-          path: ${{ env.HOME }}/src
+          key: sources-${{ env.BINUTILS_VERSION }}-${{ env.GCC_VERSION }}
+          path: $HOME/src
 
       - name: Install dependencies
         if: steps.cross-cache.outputs.cache-hit != 'true'
@@ -46,27 +58,22 @@ jobs:
       - name: Download sources
         if: steps.source-cache.outputs.cache-hit != 'true'
         run: |
-          mkdir -p $HOME/src
-          cd $HOME/src
+          cd "$SRCDIR"
 
-          # Change versions here
-          wget https://ftp.gnu.org/gnu/binutils/binutils-2.45.tar.gz
-          wget https://ftp.gnu.org/gnu/gcc/gcc-15.2.0/gcc-15.2.0.tar.gz
+          wget https://ftp.gnu.org/gnu/binutils/binutils-${BINUTILS_VERSION}.tar.gz
+          wget https://ftp.gnu.org/gnu/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz
 
-          tar -xzf binutils-2.45.tar.gz
-          tar -xzf gcc-15.2.0.tar.gz
+          tar -xzf binutils-${BINUTILS_VERSION}.tar.gz
+          tar -xzf gcc-${GCC_VERSION}.tar.gz
 
       - name: Build binutils
         if: steps.cross-cache.outputs.cache-hit != 'true'
         run: |
-          export PREFIX="${HOME}/opt/cross"
-          export TARGET=i686-elf
           export PATH="$PREFIX/bin:$PATH"
+          mkdir -p "$SRCDIR/build-binutils"
+          cd "$SRCDIR/build-binutils"
 
-          mkdir -p $HOME/src/build-binutils
-          cd $HOME/src/build-binutils
-
-          ../binutils-2.45/configure \
+          ../binutils-${BINUTILS_VERSION}/configure \
             --target=$TARGET \
             --prefix="$PREFIX" \
             --with-sysroot \
@@ -79,17 +86,14 @@ jobs:
       - name: Build GCC
         if: steps.cross-cache.outputs.cache-hit != 'true'
         run: |
-          export PREFIX="${HOME}/opt/cross"
-          export TARGET=i686-elf
           export PATH="$PREFIX/bin:$PATH"
 
-          # Fail if assembler is missing
-          which -- $TARGET-as || { echo "ERROR: $TARGET-as is NOT in PATH"; exit 1; }
+          which -- $TARGET-as || { echo "ERROR: assembler missing"; exit 1; }
 
-          mkdir -p $HOME/src/build-gcc
-          cd $HOME/src/build-gcc
+          mkdir -p "$SRCDIR/build-gcc"
+          cd "$SRCDIR/build-gcc"
 
-          ../gcc-15.2.0/configure \
+          ../gcc-${GCC_VERSION}/configure \
             --target=$TARGET \
             --prefix="$PREFIX" \
             --disable-nls \
@@ -105,7 +109,7 @@ jobs:
           make install-target-libstdc++-v3
 
       - name: Add cross compiler to PATH
-        run: echo "${HOME}/opt/cross/bin" >> $GITHUB_PATH
+        run: echo "${PREFIX}/bin" >> $GITHUB_PATH
 
       - name: Verify toolchain
         run: |
