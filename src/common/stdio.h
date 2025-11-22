@@ -2,7 +2,7 @@
 
 #include <stdarg.h>
 #include <stdint.h>
-#include "symbol.h"
+#include <stdbool.h>
 
 #define VGA_ADDR 0xB8000
 #define VGA_WIDTH 80
@@ -41,8 +41,34 @@ struct Screen{
     uint32_t                  offset;
 };
 
-void clear_screen(void);
+typedef void (*HandlerFunc)(const char*, va_list*);
+
+typedef enum {
+    SIGNED_INT = 'd',
+    UNSIGNED_INT = 'u',
+    STRING = 's',
+    CHAR = 'c',
+    UNSIGNED_HEX = 'x',
+    POINTER = 'p',
+    UNDEFINED
+} Symbol;
+
+typedef struct {
+    Symbol type;
+    char *modifiers;
+} FullSymbol;
+
+typedef struct {
+    Symbol sym;
+    HandlerFunc handler;
+} SymbolHandler;
+
+typedef struct {
+    SymbolHandler *map;
+    uint32_t count;
+} SymbolMap;
+
+void clearScreen(void);
 void printk(const char *, ...);
-void chrToScreen(char chr, VGA_COLOR color);
-void strToScreen(const char *str, VGA_COLOR color);
-void updateOffset();
+void putc(char chr, VGA_COLOR color);
+void puts(const char *str, VGA_COLOR color);
