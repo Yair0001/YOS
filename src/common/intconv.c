@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 /**
- * General number-to-string converter.
+ * @brief General number-to-string converter.
  *
  * @param num       The number to convert (unsigned).
  * @param buf       Buffer to write into.
@@ -48,7 +48,7 @@
 }
 
 /**
- * Convert an unsigned integer to a decimal string.
+ * @brief Convert an unsigned integer to a decimal string.
  *
  * @param num  The number to convert.
  * @param buf  The buffer to write into. Must be large enough.
@@ -59,7 +59,7 @@ const char* utoa(uint32_t n, char* buf) {
 }
 
 /**
- * Convert a signed integer to a decimal string.
+ * @brief Convert a signed integer to a decimal string.
  *
  * @param n    The number to convert.
  * @param buf  The buffer to write into. Must be large enough.
@@ -69,7 +69,7 @@ const char* utoa(uint32_t n, char* buf) {
 }
 
 /**
- * Convert an unsigned integer to a hexadecimal string.
+ * @brief Convert an unsigned integer to a hexadecimal string.
  *
  * @param num  The number to convert.
  * @param buf  The buffer to write into. Must be large enough.

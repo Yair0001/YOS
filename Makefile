@@ -14,7 +14,7 @@ ASM = nasm
 CC  = i686-elf-gcc
 LD  = i686-elf-ld
 
-CC_FLAGS = -g -ffreestanding -nostdlib -nostartfiles -nodefaultlibs -Wall -O0 -I$(COMMON)
+CC_FLAGS = -g -ffreestanding -nostdlib -nostartfiles -nodefaultlibs -Wall -O0 -I$(SRC)
 LD_FLAGS = -m elf_i386
 
 export SRC BIN ASM BUILD CC LD CC_FLAGS LD_FLAGS

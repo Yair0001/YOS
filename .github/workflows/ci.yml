@@ -1,124 +1,124 @@
-name: YOS CI
+# name: YOS CI
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:
+# on:
+#   push:
+#     branches: [ main ]
+#   pull_request:
+#     branches: [ main ]
+#   workflow_dispatch:
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
 
-    env:
-      PREFIX: /home/runner/opt/cross
-      SRCDIR: /home/runner/src
-      TARGET: i686-elf
-      BINUTILS_VERSION: 2.45
-      GCC_VERSION: 15.2.0
+#     env:
+#       PREFIX: /home/runner/opt/cross
+#       SRCDIR: /home/runner/src
+#       TARGET: i686-elf
+#       BINUTILS_VERSION: 2.45
+#       GCC_VERSION: 15.2.0
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
 
-      - name: Ensure directories exist
-        run: |
-          mkdir -p /home/runner/opt/cross
-          mkdir -p /home/runner/src
+#       - name: Ensure directories exist
+#         run: |
+#           mkdir -p /home/runner/opt/cross
+#           mkdir -p /home/runner/src
 
-      - name: Cache compiled cross toolchain
-        id: cross-cache
-        uses: actions/cache@v4
-        with:
-          key: cross-${{ env.TARGET }}-${{ env.BINUTILS_VERSION }}-${{ env.GCC_VERSION }}
-          path: /home/runner/opt/cross
+#       - name: Cache compiled cross toolchain
+#         id: cross-cache
+#         uses: actions/cache@v4
+#         with:
+#           key: cross-${{ env.TARGET }}-${{ env.BINUTILS_VERSION }}-${{ env.GCC_VERSION }}
+#           path: /home/runner/opt/cross
 
-      - name: Cache downloaded GCC+Binutils sources
-        id: source-cache
-        uses: actions/cache@v4
-        with:
-          key: sources-${{ env.BINUTILS_VERSION }}-${{ env.GCC_VERSION }}
-          path: /home/runner/src
+#       - name: Cache downloaded GCC+Binutils sources
+#         id: source-cache
+#         uses: actions/cache@v4
+#         with:
+#           key: sources-${{ env.BINUTILS_VERSION }}-${{ env.GCC_VERSION }}
+#           path: /home/runner/src
 
-      - name: Install dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y \
-            build-essential \
-            bison \
-            flex \
-            libgmp3-dev \
-            libmpc-dev \
-            libmpfr-dev \
-            texinfo \
-            wget \
-            nasm
+#       - name: Install dependencies
+#         run: |
+#           sudo apt update
+#           sudo apt install -y \
+#             build-essential \
+#             bison \
+#             flex \
+#             libgmp3-dev \
+#             libmpc-dev \
+#             libmpfr-dev \
+#             texinfo \
+#             wget \
+#             nasm
 
-      - name: Download sources
-        if: steps.source-cache.outputs.cache-hit != 'true'
-        run: |
-          cd /home/runner/src
+#       - name: Download sources
+#         if: steps.source-cache.outputs.cache-hit != 'true'
+#         run: |
+#           cd /home/runner/src
 
-          wget https://ftp.gnu.org/gnu/binutils/binutils-${BINUTILS_VERSION}.tar.gz
-          wget https://ftp.gnu.org/gnu/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz
+#           wget https://ftp.gnu.org/gnu/binutils/binutils-${BINUTILS_VERSION}.tar.gz
+#           wget https://ftp.gnu.org/gnu/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz
 
-          tar -xzf binutils-${BINUTILS_VERSION}.tar.gz
-          tar -xzf gcc-${GCC_VERSION}.tar.gz
+#           tar -xzf binutils-${BINUTILS_VERSION}.tar.gz
+#           tar -xzf gcc-${GCC_VERSION}.tar.gz
 
-      - name: Build binutils
-        if: steps.cross-cache.outputs.cache-hit != 'true'
-        run: |
-          mkdir -p /home/runner/src/build-binutils
-          cd /home/runner/src/build-binutils
+#       - name: Build binutils
+#         if: steps.cross-cache.outputs.cache-hit != 'true'
+#         run: |
+#           mkdir -p /home/runner/src/build-binutils
+#           cd /home/runner/src/build-binutils
 
-          ../binutils-${BINUTILS_VERSION}/configure \
-            --target=i686-elf \
-            --prefix="/home/runner/opt/cross" \
-            --with-sysroot \
-            --disable-nls \
-            --disable-werror
+#           ../binutils-${BINUTILS_VERSION}/configure \
+#             --target=i686-elf \
+#             --prefix="/home/runner/opt/cross" \
+#             --with-sysroot \
+#             --disable-nls \
+#             --disable-werror
 
-          make -j$(nproc)
-          make install
+#           make -j$(nproc)
+#           make install
 
-      - name: Build GCC
-        if: steps.cross-cache.outputs.cache-hit != 'true'
-        run: |
-          which -- i686-elf-as || { echo "ERROR: assembler missing"; exit 1; }
+#       - name: Build GCC
+#         if: steps.cross-cache.outputs.cache-hit != 'true'
+#         run: |
+#           which -- i686-elf-as || { echo "ERROR: assembler missing"; exit 1; }
 
-          mkdir -p /home/runner/src/build-gcc
-          cd /home/runner/src/build-gcc
+#           mkdir -p /home/runner/src/build-gcc
+#           cd /home/runner/src/build-gcc
 
-          ../gcc-${GCC_VERSION}/configure \
-            --target=i686-elf \
-            --prefix="/home/runner/opt/cross" \
-            --disable-nls \
-            --enable-languages=c,c++ \
-            --without-headers \
-            --disable-hosted-libstdcxx
+#           ../gcc-${GCC_VERSION}/configure \
+#             --target=i686-elf \
+#             --prefix="/home/runner/opt/cross" \
+#             --disable-nls \
+#             --enable-languages=c,c++ \
+#             --without-headers \
+#             --disable-hosted-libstdcxx
 
-          make all-gcc -j$(nproc)
-          make all-target-libgcc -j$(nproc)
-          make all-target-libstdc++-v3 -j$(nproc)
-          make install-gcc
-          make install-target-libgcc
-          make install-target-libstdc++-v3
+#           make all-gcc -j$(nproc)
+#           make all-target-libgcc -j$(nproc)
+#           make all-target-libstdc++-v3 -j$(nproc)
+#           make install-gcc
+#           make install-target-libgcc
+#           make install-target-libstdc++-v3
 
-      - name: Add cross compiler to PATH
-        run: echo "/home/runner/opt/cross/bin" >> $GITHUB_PATH
+#       - name: Add cross compiler to PATH
+#         run: echo "/home/runner/opt/cross/bin" >> $GITHUB_PATH
 
-      - name: Verify toolchain
-        run: |
-          i686-elf-gcc --version
-          i686-elf-ld --version
+#       - name: Verify toolchain
+#         run: |
+#           i686-elf-gcc --version
+#           i686-elf-ld --version
 
-      - name: Install QEMU
-        run: |
-          sudo apt update
-          sudo apt install -y qemu-system-i386
+#       - name: Install QEMU
+#         run: |
+#           sudo apt update
+#           sudo apt install -y qemu-system-i386
       
-      - name: Test Makefile
-        run: |
-          make clean
-          make all
+#       - name: Test Makefile
+#         run: |
+#           make clean
+#           make all

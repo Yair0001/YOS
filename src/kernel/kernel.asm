@@ -1,5 +1,7 @@
 [bits 16]
 
+section .text.boot
+
 CODE_OFFSET equ 0x8
 DATA_OFFSET equ 0x10
 
@@ -60,5 +62,5 @@ PModeMain:
     mov gs, ax
     mov ebp, 0x9c00
     mov esp, ebp
-    
+
    jmp kern_main
