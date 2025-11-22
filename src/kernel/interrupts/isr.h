@@ -1,8 +1,5 @@
 #pragma once
-#include "idt.h"
 #include <stdint.h>
-#include "common/stdio.h"
-#include "common/types.h"
 
 #define ISR_COUNT 32
 

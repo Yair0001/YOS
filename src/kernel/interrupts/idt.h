@@ -1,10 +1,6 @@
 #pragma once
 #include <stdint.h>
 
-#include "isr.h"
-#include "common/stdio.h"
-#include "common/types.h"
-
 
 #define IDT_SIZE 256
 #define CODE_SEG_SELECTOR 0x10

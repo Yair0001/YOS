@@ -1,4 +1,6 @@
 #include "idt.h"
+#include "isr.h"
+#include "common/stdio.h"
 
 static idtEntry idt[IDT_SIZE];
 static struct idtr idtr;

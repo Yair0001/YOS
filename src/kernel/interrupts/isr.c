@@ -1,4 +1,7 @@
+#include "idt.h"
 #include "isr.h"
+#include "common/stdio.h"
+
 
 static void (*const isr_handlers[ISR_COUNT])(void) = {
     isr0,  isr1,  isr2,  isr3,  isr4,  isr5,  isr6,  isr7,
