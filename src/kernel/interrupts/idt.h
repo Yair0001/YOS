@@ -3,7 +3,7 @@
 
 
 #define IDT_SIZE 256
-#define CODE_SEG_SELECTOR 0x10
+#define CODE_SEG_SELECTOR 0x8
 
 typedef enum : uint8_t {
     INT32BIT  = 0xE,

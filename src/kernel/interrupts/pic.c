@@ -1,5 +1,15 @@
 #include "pic.h"
 #include "common/port.h"
+#include "kernel/interrupts/timer.h"
+
+static void registerHandlers(){
+    initTimer();
+    
+    irqEnable(KEYBOARD);
+    irqEnable(SLAVE_PIC);
+    irqEnable(RTC);
+    irqEnable(MOUSE);
+}
 
 void initPIC(){
     outb(MASTER_PIC_CMD_PORT, ICW1);
@@ -22,12 +32,7 @@ void initPIC(){
     outb(SLAVE_PIC_DATA_PORT, ICW4);
     ioWait();
 
-
-    irqEnable(PIT_TIMER);
-    irqEnable(KEYBOARD);
-    irqEnable(SLAVE_PIC);
-    irqEnable(RTC);
-    irqEnable(MOUSE);
+    registerHandlers();
 }
 
 void irqDisable(uint8_t irq){

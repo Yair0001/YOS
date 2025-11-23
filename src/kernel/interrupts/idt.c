@@ -1,5 +1,6 @@
 #include "idt.h"
 #include "isr.h"
+#include "irq.h"
 #include "common/stdio.h"
 
 static idtEntry idt[IDT_SIZE];
@@ -24,7 +25,9 @@ void initIDT() {
         .used       = 1
     };
 
-    initISR(ISR_COUNT, 0x08, attr);
+    initISR(ISR_COUNT, CODE_SEG_SELECTOR, attr);
+    initIRQ(CODE_SEG_SELECTOR, attr);
+    
 
     __asm__ volatile ("lidt %0" : : "m"(idtr));
 

@@ -8,5 +8,6 @@ void timerHandler(void* regs) {
 }
 
 void initTimer() {
+    irqEnable(PIT_TIMER);
     registerIrqHandler(PIT_TIMER, (irq_handler_t)timerHandler);
 }
