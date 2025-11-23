@@ -3,6 +3,7 @@
 #include "interrupts/idt.h"
 #include "interrupts/pic.h"
 #include "interrupts/timer.h"
+#include <stdint.h>
 
 void kern_main(){
     clearScreen();
@@ -12,11 +13,17 @@ void kern_main(){
 
     initIDT();
     initPIC();
-    initTimer();
 
     printk("System ready.\n");
 
     __asm__ volatile("sti");
+
+    uint32_t cnt = 1;
+    while (1){
+        sleep(1000);
+        printk("Slept for %d seconds\n", cnt);
+        cnt++;
+    }
 
     while(1);
 }
