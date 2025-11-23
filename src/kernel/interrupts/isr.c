@@ -46,7 +46,7 @@ static const char *exception_names[] = {
     "Reserved"
 };
 
-static void defaultExceptionHandler(registers *regs) {
+static void defaultExceptionHandler(isr_registers *regs) {
     printk("\n========== EXCEPTION ==========\n");
     printk("Exception: %s (INT %d)\n", exception_names[regs->int_no], regs->int_no);
     printk("Error Code: 0x%x\n", regs->err_code);
@@ -76,7 +76,7 @@ void registerIsrHandler(uint8_t isr, isr_handler_t handler) {
     }
 }
 
-void isrHandler(registers *regs) {
+void isrHandler(isr_registers *regs) {
     if (isr_handlers[regs->int_no]) {
         isr_handlers[regs->int_no](regs);
     } else {

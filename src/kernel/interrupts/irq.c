@@ -21,7 +21,7 @@ void registerIrqHandler(uint8_t irq, irq_handler_t handler) {
     }
 }
 
-void irqHandler(registers* regs) {
+void irqHandler(irq_registers* regs) {
     uint8_t irq = regs->int_no - 32;
 
     if (irq_handlers[irq]) {

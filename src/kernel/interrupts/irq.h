@@ -14,8 +14,16 @@ IRQ(12); IRQ(13); IRQ(14); IRQ(15);
 
 #undef IRQ
 
-typedef void (*irq_handler_t)(registers*);
 
-void irqHandler(registers* regs);
+typedef struct __attribute__((packed)) {
+    uint32_t gs, fs, es, ds;
+    uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;
+    uint32_t int_no;
+    uint32_t eip, cs, eflags, useresp, ss;
+} irq_registers;
+
+typedef void (*irq_handler_t)(irq_registers*);
+
+void irqHandler(irq_registers* regs);
 void registerIrqHandler(uint8_t irq, irq_handler_t handler);
 void initIRQ(uint16_t selector, idtAttr attr);

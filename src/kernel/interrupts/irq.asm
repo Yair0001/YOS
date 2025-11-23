@@ -6,7 +6,6 @@ extern irqHandler
 global irq%1
 irq%1:
     cli
-    push 0 
     push %2
     jmp irq_common
 %endmacro
@@ -56,7 +55,7 @@ irq_common:
 
     popad
 
-    add esp, 8
+    add esp, 4
 
     sti
     iret
