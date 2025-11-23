@@ -1,9 +1,10 @@
-#include "idt.h"
 #include "isr.h"
+#include "idt.h"
 #include "common/stdio.h"
 
+static isr_handler_t isr_handlers[ISR_COUNT] = {0};
 
-static void (*const isr_handlers[ISR_COUNT])(void) = {
+static void (*const isr_stubs[ISR_COUNT])(void) = {
     isr0,  isr1,  isr2,  isr3,  isr4,  isr5,  isr6,  isr7,
     isr8,  isr9,  isr10, isr11, isr12, isr13, isr14, isr15,
     isr16, isr17, isr18, isr19, isr20, isr21, isr22, isr23,
@@ -45,15 +46,9 @@ static const char *exception_names[] = {
     "Reserved"
 };
 
-void isrHandler(registers *regs) {
+static void defaultExceptionHandler(registers *regs) {
     printk("\n========== EXCEPTION ==========\n");
-
-    if (regs->int_no < 32) {
-        printk("Exception: %s (INT %d)\n", exception_names[regs->int_no], regs->int_no);
-    } else {
-        printk("Interrupt: %d\n", regs->int_no);
-    }
-
+    printk("Exception: %s (INT %d)\n", exception_names[regs->int_no], regs->int_no);
     printk("Error Code: 0x%x\n", regs->err_code);
 
     printk("\n--- Registers ---\n");
@@ -68,17 +63,29 @@ void isrHandler(registers *regs) {
     printk("EIP=0x%x  EFLAGS=0x%x  UserESP=0x%x\n", regs->eip, regs->eflags, regs->useresp);
 
     printk("===============================\n");
+    printk("System halted.\n");
 
-    if (regs->int_no < 32) {
-        printk("System halted.\n");
-        for (;;) {
-            __asm__ volatile("hlt");
-        }
+    for (;;) {
+        __asm__ volatile("hlt");
+    }
+}
+
+void registerIsrHandler(uint8_t isr, isr_handler_t handler) {
+    if (isr < ISR_COUNT) {
+        isr_handlers[isr] = handler;
+    }
+}
+
+void isrHandler(registers *regs) {
+    if (isr_handlers[regs->int_no]) {
+        isr_handlers[regs->int_no](regs);
+    } else {
+        defaultExceptionHandler(regs);
     }
 }
 
 void initISR(int amount, uint16_t selector, idtAttr attr) {
     for (int i = 0; i < amount && i < ISR_COUNT; i++) {
-        setGate(i, (uint32_t)isr_handlers[i], selector, attr);
+        setGate(i, (uint32_t)isr_stubs[i], selector, attr);
     }
 }

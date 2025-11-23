@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include "idt.h"
 
 #define ISR_COUNT 32
 
@@ -23,4 +24,8 @@ typedef struct __attribute__((packed)) {
     uint32_t eip, cs, eflags, useresp, ss;
 } registers;
 
+typedef void (*isr_handler_t)(registers*);
+
 void isrHandler(registers* regs);
+void registerIsrHandler(uint8_t isr, isr_handler_t handler);
+void initISR(int amount, uint16_t selector, idtAttr attr);
