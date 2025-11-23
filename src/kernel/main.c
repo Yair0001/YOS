@@ -27,4 +27,3 @@ void kern_main(){
 
     while(1);
 }
-
